@@ -1,0 +1,46 @@
+--- origsrc/omake-0.9.8.6/lib/configure/ncurses.om	2007-05-01 13:12:04.000000000 -0500
++++ src/omake-0.9.8.6/lib/configure/ncurses.om	2011-12-15 22:49:30.618378100 -0600
+@@ -28,12 +28,14 @@ open configure/Configure
+     NCURSES_TERMH_IN_NCURSES = false
+     if $(not $(equal $(OSTYPE), Win32))
+         ConfMsgChecking(for ncurses)
++        NCURSES_NCURSESH_IN_NCURSES = $(CheckHeader ncurses/ncurses.h)
+         NCURSES_TERMH_IN_NCURSES = $(CheckHeader ncurses/term.h)
+-        NCURSES_AVAILABLE = $(ConfMsgFound $(and $(CheckHeader ncurses.h), $(or $(NCURSES_TERMH_IN_NCURSES), $(CheckHeader term.h)), $(CheckLib ncurses, initscr setupterm tigetstr)))
++        NCURSES_AVAILABLE = $(ConfMsgFound $(and $(or $(NCURSES_NCURSESH_IN_NCURSES), $(CheckHeader ncurses.h)), $(or $(NCURSES_TERMH_IN_NCURSES), $(CheckHeader term.h)), $(CheckLib ncurses, initscr setupterm tigetstr)))
+         export
+ 
+     NCURSES_CFLAGS[] =
+         $(if $(NCURSES_AVAILABLE), -DNCURSES, $(EMPTY_ARRAY))
++        $(if $(NCURSES_NCURSESH_IN_NCURSES), -DNCURSESH_IN_NCURSES, $(EMPTY_ARRAY))
+         $(if $(NCURSES_TERMH_IN_NCURSES), -DTERMH_IN_NCURSES, $(EMPTY_ARRAY))
+ 
+     NCURSES_CLIBS = $(if $(NCURSES_AVAILABLE), -lncurses)
+--- origsrc/omake-0.9.8.6/src/libmojave-external/cutil/OMakefile	2007-04-24 19:28:44.000000000 -0500
++++ src/omake-0.9.8.6/src/libmojave-external/cutil/OMakefile	2011-12-15 22:50:28.158669200 -0600
+@@ -11,6 +11,10 @@ if $(and $(LM_STANDALONE), $(NCURSES_AVA
+     CFLAGS += -DNCURSES
+     export
+ 
++if $(NCURSES_NCURSESH_IN_NCURSES)
++    CFLAGS += -DNCURSESH_IN_NCURSES
++    export
++
+ if $(NCURSES_TERMH_IN_NCURSES)
+     CFLAGS += -DTERMH_IN_NCURSES
+     export
+--- origsrc/omake-0.9.8.6/src/libmojave-external/cutil/lm_terminfo.c	2007-05-15 14:03:32.000000000 -0500
++++ src/omake-0.9.8.6/src/libmojave-external/cutil/lm_terminfo.c	2011-12-15 22:50:00.383080500 -0600
+@@ -14,7 +14,11 @@
+ #ifdef NCURSES
+ 
+ /* Headers that are readline-specific must be included here. */
+-#include <ncurses.h>
++#ifdef NCURSESH_IN_NCURSES
++#  include <ncurses/ncurses.h>
++#else
++#  include <ncurses.h>
++#endif
+ 
+ #ifdef TERMH_IN_NCURSES
+ #  include <ncurses/term.h>
