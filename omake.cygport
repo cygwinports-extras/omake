@@ -1,0 +1,32 @@
+inherit ocaml
+
+NAME="omake"
+VERSION=0.9.8.6-0.rc1
+RELEASE=1
+CATEGORY="Devel"
+SUMMARY="OCaml build system"
+DESCRIPTION="OMake is a build system designed for scalability and portability.
+It uses a syntax similar to make utilities you may have used, but it features
+many additional enhancements."
+HOMEPAGE="http://omake.metaprl.org/"
+SRC_URI="http://omake.metaprl.org/downloads/omake-${VERSION}.tar.gz"
+SRC_DIR="omake-${VERSION%-*}"
+
+PATCH_URI="
+	http://pkgs.fedoraproject.org/cgit/ocaml-omake.git/plain/omake-debian-disable-ocaml-warnings.patch
+	http://pkgs.fedoraproject.org/cgit/ocaml-omake.git/plain/omake-0.9.8.6-fix-and-or-operators.patch
+	0.9.8.6-as-needed.patch
+	0.9.8.6-ncurses-ncurses.h.patch
+"
+
+src_compile() {
+	lndirs
+	cd ${B}
+	export PREFIX=/usr
+	cygmake all
+}
+
+src_install() {
+	cd ${B}
+	INSTALL_ROOT=${D} cyginstall
+}
